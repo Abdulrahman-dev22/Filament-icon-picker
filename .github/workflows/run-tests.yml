@@ -1,0 +1,45 @@
+name: run-tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.1'
+            filament: '^3.0'
+            laravel: '^10.0'
+          - php: '8.2'
+            filament: '^3.0'
+            laravel: '^11.0'
+          - php: '8.3'
+            filament: '^4.0'
+            laravel: '^12.0'
+          - php: '8.3'
+            filament: '^5.0'
+            laravel: '^13.0'
+          - php: '8.4'
+            filament: '^5.0'
+            laravel: '^13.0'
+
+    name: PHP ${{ matrix.php }} · Filament ${{ matrix.filament }} · Laravel ${{ matrix.laravel }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, intl, sqlite3
+          coverage: none
+
+      - name: Install dependencies
+        run: composer update --with "filament/forms:${{ matrix.filament }}" --with "laravel/framework:${{ matrix.laravel }}" --prefer-stable --no-interaction --no-progress
+
+      - name: Run tests
+        run: vendor/bin/pest --ci

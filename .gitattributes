@@ -1,0 +1,9 @@
+# Exclude development-only files from distributed archives (Packagist zips).
+/.github            export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/.editorconfig      export-ignore
+/phpunit.xml.dist   export-ignore
+/pint.json          export-ignore
+/tests              export-ignore
+/CHANGELOG.md       export-ignore

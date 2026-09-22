@@ -1,0 +1,282 @@
+/*
+ * Filament Icon Picker
+ *
+ * Plain CSS on purpose: it is served as a Filament asset and must work with
+ * Filament 3 (Tailwind 3) as well as Filament 4/5 (Tailwind 4) without a
+ * build step. The panel's primary colour is written by the field as inline
+ * custom properties (--fi-icon-picker-primary-light/-dark/-soft-light),
+ * because the two generations expose colours to CSS in incompatible formats.
+ */
+
+.fi-icon-picker {
+    --fi-icon-picker-columns-default: 4;
+    --fi-icon-picker-max-height: 20rem;
+    --fi-icon-picker-gap: 0.375rem;
+    --fi-icon-picker-icon-size: 1.5rem;
+
+    --fi-icon-picker-primary: var(--fi-icon-picker-primary-light, rgb(79 70 229));
+    --fi-icon-picker-primary-soft: var(--fi-icon-picker-primary-soft-light, rgb(238 242 255));
+    --fi-icon-picker-ring: rgba(0, 0, 0, 0.1);
+    --fi-icon-picker-surface: #ffffff;
+    --fi-icon-picker-hover: rgba(0, 0, 0, 0.04);
+    --fi-icon-picker-muted: rgb(107 114 128);
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dark .fi-icon-picker {
+    --fi-icon-picker-primary: var(--fi-icon-picker-primary-dark, rgb(129 140 248));
+    --fi-icon-picker-primary-soft: rgba(255, 255, 255, 0.06);
+    --fi-icon-picker-ring: rgba(255, 255, 255, 0.2);
+    --fi-icon-picker-surface: rgb(17 24 39);
+    --fi-icon-picker-hover: rgba(255, 255, 255, 0.06);
+    --fi-icon-picker-muted: rgb(156 163 175);
+}
+
+.fi-icon-picker.fi-disabled {
+    opacity: 0.7;
+}
+
+/* Selection summary ------------------------------------------------------ */
+
+.fi-icon-picker-selection {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    background-color: var(--fi-icon-picker-surface);
+    box-shadow: inset 0 0 0 1px var(--fi-icon-picker-ring);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.fi-icon-picker-selection-preview {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: var(--fi-icon-picker-icon-size);
+    height: var(--fi-icon-picker-icon-size);
+    color: var(--fi-icon-picker-primary);
+}
+
+.fi-icon-picker-selection-preview > svg,
+.fi-icon-picker-selection-preview > img {
+    width: 100%;
+    height: 100%;
+}
+
+.fi-icon-picker-selection-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8125rem;
+}
+
+.fi-icon-picker-selection-placeholder {
+    font-family: inherit;
+    font-size: 0.875rem;
+    color: var(--fi-icon-picker-muted);
+}
+
+.fi-icon-picker-clear {
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--fi-icon-picker-primary);
+    cursor: pointer;
+}
+
+.fi-icon-picker-clear:hover {
+    text-decoration: underline;
+}
+
+/* Tabs ------------------------------------------------------------------- */
+
+.fi-icon-picker-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+    background-color: var(--fi-icon-picker-hover);
+}
+
+.fi-icon-picker-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border: 0;
+    border-radius: 0.375rem;
+    background: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    color: var(--fi-icon-picker-muted);
+    cursor: pointer;
+    transition: background-color 75ms, color 75ms;
+}
+
+.fi-icon-picker-tab:hover {
+    color: inherit;
+}
+
+.fi-icon-picker-tab.fi-active {
+    background-color: var(--fi-icon-picker-surface);
+    color: var(--fi-icon-picker-primary);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0 0 0 1px var(--fi-icon-picker-ring);
+}
+
+.fi-icon-picker-tab-count {
+    padding: 0 0.375rem;
+    border-radius: 9999px;
+    background-color: var(--fi-icon-picker-hover);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1rem;
+}
+
+/* Grid ------------------------------------------------------------------- */
+
+.fi-icon-picker-set {
+    max-height: var(--fi-icon-picker-max-height);
+    overflow-y: auto;
+    padding: var(--fi-icon-picker-gap);
+    border-radius: 0.5rem;
+    background-color: var(--fi-icon-picker-surface);
+    box-shadow: inset 0 0 0 1px var(--fi-icon-picker-ring);
+}
+
+.fi-icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--fi-icon-picker-columns-default), minmax(0, 1fr));
+    gap: var(--fi-icon-picker-gap);
+}
+
+@media (min-width: 640px) {
+    .fi-icon-picker-grid {
+        grid-template-columns: repeat(var(--fi-icon-picker-columns-sm, var(--fi-icon-picker-columns-default)), minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 768px) {
+    .fi-icon-picker-grid {
+        grid-template-columns: repeat(var(--fi-icon-picker-columns-md, var(--fi-icon-picker-columns-sm, var(--fi-icon-picker-columns-default))), minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .fi-icon-picker-grid {
+        grid-template-columns: repeat(var(--fi-icon-picker-columns-lg, var(--fi-icon-picker-columns-md, var(--fi-icon-picker-columns-sm, var(--fi-icon-picker-columns-default)))), minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1280px) {
+    .fi-icon-picker-grid {
+        grid-template-columns: repeat(var(--fi-icon-picker-columns-xl, var(--fi-icon-picker-columns-lg, var(--fi-icon-picker-columns-md, var(--fi-icon-picker-columns-sm, var(--fi-icon-picker-columns-default))))), minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1536px) {
+    .fi-icon-picker-grid {
+        grid-template-columns: repeat(var(--fi-icon-picker-columns-2xl, var(--fi-icon-picker-columns-xl, var(--fi-icon-picker-columns-lg, var(--fi-icon-picker-columns-md, var(--fi-icon-picker-columns-sm, var(--fi-icon-picker-columns-default)))))), minmax(0, 1fr));
+    }
+}
+
+.fi-icon-picker-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    padding: 0.5rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 75ms, box-shadow 75ms, color 75ms;
+}
+
+.fi-icon-picker-option:hover {
+    background-color: var(--fi-icon-picker-hover);
+}
+
+.fi-icon-picker-option:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--fi-icon-picker-primary);
+}
+
+.fi-icon-picker-option.fi-selected {
+    background-color: var(--fi-icon-picker-primary-soft);
+    color: var(--fi-icon-picker-primary);
+    box-shadow: inset 0 0 0 2px var(--fi-icon-picker-primary);
+}
+
+.fi-icon-picker-option:disabled {
+    cursor: default;
+}
+
+.fi-icon-picker-option:disabled:hover {
+    background: none;
+}
+
+.fi-icon-picker-icon {
+    display: block;
+    width: var(--fi-icon-picker-icon-size);
+    height: var(--fi-icon-picker-icon-size);
+    max-width: 100%;
+    max-height: 100%;
+    fill: currentColor;
+}
+
+.fi-icon-picker-icon[stroke] {
+    fill: none;
+}
+
+.fi-icon-picker-empty {
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--fi-icon-picker-muted);
+}
+
+/* Search ----------------------------------------------------------------- */
+
+.fi-icon-picker-search {
+    width: 100%;
+}
+
+/* Mirrors Filament's own input styling so the same markup works on v3, v4 and v5. */
+.fi-icon-picker-search-input {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem 0.375rem 0;
+    border: 0;
+    background: transparent;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+    color: inherit;
+    outline: none;
+    box-shadow: none;
+}
+
+.fi-icon-picker-search-input:focus {
+    outline: none;
+    box-shadow: none;
+    --tw-ring-shadow: 0 0 #0000;
+}
+
+.fi-icon-picker-search-input::placeholder {
+    color: var(--fi-icon-picker-muted);
+}

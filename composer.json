@@ -1,0 +1,81 @@
+{
+    "name": "abdulrahman-dev22/filament-icon-picker",
+    "description": "A searchable, tabbed icon picker form field for Filament v3, v4 and v5, with bundled Heroicons and custom SVG icon sets.",
+    "keywords": [
+        "laravel",
+        "filament",
+        "filament-plugin",
+        "icon",
+        "icon-picker",
+        "heroicons",
+        "svg",
+        "filament-icon-picker"
+    ],
+    "homepage": "https://github.com/Abdulrahman-dev22/Filament-icon-picker",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Abdulrahman Bumander",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "blade-ui-kit/blade-heroicons": "^2.5",
+        "blade-ui-kit/blade-icons": "^1.5",
+        "filament/forms": "^3.0|^4.0|^5.0",
+        "illuminate/contracts": "^10.45|^11.0|^12.0|^13.0",
+        "spatie/laravel-package-tools": "^1.9"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
+        "pestphp/pest": "^2.0|^3.0|^4.0",
+        "pestphp/pest-plugin-laravel": "^2.0|^3.0|^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AbdulrahmanDev22\\FilamentIconPicker\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AbdulrahmanDev22\\FilamentIconPicker\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint",
+        "test:filament3": [
+            "composer update --with \"filament/forms:^3.0\" --prefer-stable --no-interaction",
+            "vendor/bin/pest"
+        ],
+        "test:filament4": [
+            "composer update --with \"filament/forms:^4.0\" --prefer-stable --no-interaction",
+            "vendor/bin/pest"
+        ],
+        "test:filament5": [
+            "composer update --with \"filament/forms:^5.0\" --prefer-stable --no-interaction",
+            "vendor/bin/pest"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "AbdulrahmanDev22\\FilamentIconPicker\\FilamentIconPickerServiceProvider"
+            ],
+            "aliases": {
+                "FilamentIconPicker": "AbdulrahmanDev22\\FilamentIconPicker\\Facades\\FilamentIconPicker"
+            }
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
