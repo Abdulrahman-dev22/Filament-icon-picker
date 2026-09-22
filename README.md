@@ -10,6 +10,7 @@ render anywhere in your app.
 - Zero configuration: Heroicons work out of the box.
 - Custom icons: point at a folder of `.svg` files. Drop a file in, it shows up.
 - Extensible: implement one small interface to add any icon source as its own tab.
+- Let admins upload new SVG icons from the picker itself; uploads are sanitised and stored on any Laravel disk.
 - Choose how the value is stored: compact reference, Blade Icons name, array/JSON with inline SVG and URL, or raw SVG.
 - API ready: `FilamentIconPicker::toArray()` and an optional `{set}/{name}.svg` route for mobile and SPA clients.
 - Client-side search per tab, configurable grid columns, keyboard focus styles, dark mode, RTL.
@@ -213,6 +214,7 @@ The bundled sets are ordinary implementations of the same interface, so you can 
 | `gridMaxHeight(string $cssLength)` | Height after which the grid scrolls. Default `20rem`. |
 | `placeholder(string $text)` | Text shown while nothing is selected. |
 | `storeAs(...)` / `storeAsReference()` / `storeAsBladeIcon()` / `storeAsArray()` / `storeAsJson()` / `storeAsSvg()` | How the value is written to the model. See *Storage formats*. |
+| `uploadable(bool\|Closure $condition = true, ?string $set = null)` / `uploadIconsTo()` / `uploadMaxSize()` / `uploadAction()` | Show an "Upload icon" action. See *Letting users upload icons*. |
 
 Plus everything from Filament's `Field`: `label()`, `required()`, `disabled()`, `default()`,
 `live()`, `afterStateUpdated()`, `rules()`, `hidden()`, `columnSpan()`, etc.
@@ -337,6 +339,53 @@ SVG file with long-lived cache headers, so mobile apps and CDNs can load icons b
 
 `AbdulrahmanDev22\FilamentIconPicker\Support\IconReference::from($value)` splits a reference into `->set`
 and `->name` when you need the parts.
+
+## Letting users upload icons
+
+Icons normally come from the filesystem you deploy. To let admins add icons at runtime, give the
+picker a set that lives on a Laravel disk and turn on the upload action:
+
+```php
+// config/filament-icon-picker.php
+'disk_icon_sets' => [
+    'uploads' => [
+        'disk' => 's3',                 // any disk from config/filesystems.php; null = uploads.disk
+        'directory' => 'icon-picker',
+        'label' => 'Uploaded Icons',
+    ],
+],
+
+'uploads' => [
+    'set' => 'uploads',                 // default target of ->uploadable(); null = first disk set
+    'disk' => env('FILAMENT_ICON_PICKER_DISK'),
+    'max_size' => 256,                  // KB
+],
+```
+
+```php
+IconPicker::make('icon')
+    ->uploadable();                                   // everyone who can edit the form
+    // ->uploadable(fn () => auth()->user()->can('upload icons'));  // gated
+    // ->uploadable(set: 'brand');                    // upload into a specific set
+```
+
+An "Upload icon" link appears next to the selected value. It opens a modal with an SVG file input
+and an optional name; on submit the file is **sanitised** (scripts, event handlers, `<foreignObject>`,
+external and `javascript:` references and unsafe `<style>` rules are removed), stored as
+`{directory}/{name}.svg`, the set's cache is refreshed and the new icon is selected.
+
+- `DiskIconSet` reads from `Storage::disk()`, so uploads survive deployments and are shared across
+  servers when the disk is S3/GCS. It also registers with Blade Icons, so `uploads:star` works as the
+  plain icon name `uploads-star`.
+- Folder based sets (`customIconsPath()`, `custom_icon_sets`) can receive uploads too, but only when
+  named explicitly with `->uploadable(set: 'key')`, so the SVGs you ship with the app are never
+  written to by accident.
+- Names are slugged and made unique (`star`, `star-2`, …). Customise the modal with
+  `->uploadAction(fn (Action $action) => $action->label('…')->modalWidth('lg'))`.
+- To use your own sanitiser (for example `enshrined/svg-sanitize`), call
+  `SvgSanitizer::using(fn (string $svg): string => …)` in a service provider.
+- Programmatic uploads: `app(IconUploader::class)->upload($set, $svgMarkup, name: 'star')` returns the
+  `IconReference` of the stored icon. Any set implementing `IconSets\Contracts\AcceptsUploads` works.
 
 ## Caching
 
