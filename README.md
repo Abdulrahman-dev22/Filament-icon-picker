@@ -207,7 +207,7 @@ The bundled sets are ordinary implementations of the same interface, so you can 
 | `icons(array\|Closure $sets, bool $merge = true)` | Add `IconSet` instances or class names. `merge: false` ignores the global registry. |
 | `withoutIconSet(string ...$keys)` / `withoutHeroicons()` | Hide globally registered sets from this field. |
 | `withoutGlobalIconSets()` | Use only sets added to this field. |
-| `columns(int\|array\|Closure $columns)` | Grid columns. `8` applies at every breakpoint; `['default' => 4, 'md' => 6, 'xl' => 10]` per breakpoint. Default `['default' => 4, 'sm' => 6, 'lg' => 8]`. |
+| `columns(int\|array\|Closure $columns)` | Grid columns. `8` applies at every breakpoint; `['default' => 4, 'md' => 6, 'xl' => 10]` per breakpoint (a missing `default` falls back to `4`). Default `['default' => 4, 'sm' => 6, 'lg' => 8]`. |
 | `searchable(bool $condition = true)` | Toggle the search box (on by default). Also `searchPrompt()`, `searchDebounce()`, `noSearchResultsMessage()`. |
 | `deselectable(bool $condition = true)` | Clicking the selected icon again clears the value (on by default). |
 | `gridMaxHeight(string $cssLength)` | Height after which the grid scrolls. Default `20rem`. |

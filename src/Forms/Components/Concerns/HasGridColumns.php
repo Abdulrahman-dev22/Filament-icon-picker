@@ -62,7 +62,9 @@ trait HasGridColumns
             $normalized[$breakpoint] = $count;
         }
 
-        $normalized['default'] ??= 1;
+        // A per-breakpoint array without `default` falls back to the package
+        // default for small screens instead of collapsing to a single column.
+        $normalized['default'] ??= $this->getDefaultGridColumns()['default'];
 
         return $normalized;
     }
