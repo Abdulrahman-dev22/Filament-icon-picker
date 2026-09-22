@@ -7,6 +7,7 @@
     $isDisabled = $isDisabled();
     $isSearchable = $isSearchable() && ! $isDisabled;
     $isDeselectable = $isDeselectable() && ! $isDisabled;
+    $isUploadable = $isUploadable() && ! $isDisabled;
     $sets = $getIconSets();
     $placeholder = $getPlaceholder() ?? __('filament-icon-picker::icon-picker.placeholder');
     $livewireKey = $this->getId() . '.' . $statePath . '.' . $field::class;
@@ -168,6 +169,12 @@
                 >
                     {{ __('filament-icon-picker::icon-picker.clear') }}
                 </button>
+            @endif
+
+            @if ($isUploadable)
+                <div class="fi-icon-picker-upload" wire:key="{{ $livewireKey }}.upload">
+                    {{ $getAction('uploadIcon') }}
+                </div>
             @endif
         </div>
 

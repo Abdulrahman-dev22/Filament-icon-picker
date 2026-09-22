@@ -21,6 +21,7 @@ use Filament\Support\Concerns\HasExtraAlpineAttributes;
 class IconPicker extends Field
 {
     use CanBeSearchable;
+    use Concerns\CanUploadIcons;
     use Concerns\HasGridColumns;
     use Concerns\HasIconSets;
     use Concerns\HasStorageFormat;
@@ -41,6 +42,10 @@ class IconPicker extends Field
         parent::setUp();
 
         $this->searchable();
+
+        $this->registerActions([
+            static fn (IconPicker $component) => $component->getUploadAction(),
+        ]);
 
         // The picker always works with "set:name" internally; the stored
         // representation is chosen with storeAs*() and converted here.

@@ -50,6 +50,47 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Icon sets stored on a filesystem disk
+    |--------------------------------------------------------------------------
+    |
+    | Like custom_icon_sets, but read from a Laravel disk (public, s3, gcs…)
+    | so icons uploaded at runtime survive deployments and are shared between
+    | servers. Use these as the target of `IconPicker::uploadable()`.
+    |
+    | 'uploads' => [
+    |     'disk' => 's3',               // null = uploads.disk below
+    |     'directory' => 'icon-picker',
+    |     'label' => 'Uploaded Icons',
+    | ],
+    |
+    */
+
+    'disk_icon_sets' => [
+        //
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Uploads
+    |--------------------------------------------------------------------------
+    |
+    | Defaults for the field's "Upload icon" action (`->uploadable()`).
+    | `set` is the key of the set new icons are written to (null = the first
+    | disk-backed set; folder sets must be named explicitly). `disk` is the
+    | default disk of DiskIconSet.
+    | `max_size` is in kilobytes. Every upload is sanitised: scripts, event
+    | handlers, embedded documents and external references are stripped.
+    |
+    */
+
+    'uploads' => [
+        'set' => null,
+        'disk' => env('FILAMENT_ICON_PICKER_DISK'),
+        'max_size' => 256,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Additional icon set classes
     |--------------------------------------------------------------------------
     |

@@ -4,36 +4,39 @@ declare(strict_types=1);
 
 namespace AbdulrahmanDev22\FilamentIconPicker\IconSets;
 
+use AbdulrahmanDev22\FilamentIconPicker\IconSets\Contracts\AcceptsUploads;
 use BladeUI\Icons\Exceptions\CannotRegisterIconSet;
 use BladeUI\Icons\Factory;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
- * An icon set built from a directory of `.svg` files. Dropping a new file in
- * the folder is enough to make it selectable.
+ * An icon set stored on a Laravel filesystem disk (local, public, S3, GCS…),
+ * so uploaded icons survive deployments and are shared between instances.
  */
-class CustomIconSet implements Contracts\AcceptsUploads
+class DiskIconSet implements AcceptsUploads
 {
     use Concerns\CachesIconList;
 
-    protected string $path;
+    protected string $directory;
 
     protected ?bool $isRegisteredWithBladeIcons = null;
 
     public function __construct(
-        string $path,
-        protected string $key = 'custom',
+        protected ?string $disk = null,
+        string $directory = 'icon-picker',
+        protected string $key = 'uploads',
         protected ?string $label = null,
     ) {
         if (! preg_match('/^[A-Za-z0-9_-]+$/', $key)) {
             throw new InvalidArgumentException("Icon set key [{$key}] may only contain letters, digits, dashes and underscores.");
         }
 
-        $this->path = rtrim($path, '/\\');
+        $this->directory = trim($directory, '/');
     }
 
     public function getKey(): string
@@ -43,12 +46,20 @@ class CustomIconSet implements Contracts\AcceptsUploads
 
     public function getLabel(): string
     {
-        return $this->label ?? __('filament-icon-picker::icon-picker.sets.custom');
+        return $this->label ?? __('filament-icon-picker::icon-picker.sets.uploads');
     }
 
-    public function getPath(): string
+    public function getDisk(): string
     {
-        return $this->path;
+        return $this->disk
+            ?? config('filament-icon-picker.uploads.disk')
+            ?? config('filament.default_filesystem_disk')
+            ?? config('filesystems.default', 'local');
+    }
+
+    public function getDirectory(): string
+    {
+        return $this->directory;
     }
 
     public function getIcons(): array
@@ -58,9 +69,9 @@ class CustomIconSet implements Contracts\AcceptsUploads
 
     public function getIcon(string $name): string|Htmlable|null
     {
-        $file = $this->getFilePath($name);
+        $path = $this->getFilePath($name);
 
-        if ($file === null || ! is_file($file)) {
+        if ($path === null || ! $this->filesystem()->exists($path)) {
             return null;
         }
 
@@ -68,38 +79,30 @@ class CustomIconSet implements Contracts\AcceptsUploads
             return "{$this->key}-{$name}";
         }
 
-        return new HtmlString((string) file_get_contents($file));
+        return new HtmlString((string) $this->filesystem()->get($path));
     }
 
     public function storeIcon(string $name, string $svg): void
     {
-        $file = $this->getFilePath($name) ?? throw new InvalidArgumentException("Invalid icon name [{$name}].");
+        $path = $this->getFilePath($name) ?? throw new InvalidArgumentException("Invalid icon name [{$name}].");
 
-        File::ensureDirectoryExists(dirname($file));
-        File::put($file, $svg);
+        $this->filesystem()->put($path, $svg);
 
         $this->memoizedIcons = null;
     }
 
     public function deleteIcon(string $name): void
     {
-        $file = $this->getFilePath($name);
-
-        if ($file !== null && is_file($file)) {
-            File::delete($file);
+        if ($path = $this->getFilePath($name)) {
+            $this->filesystem()->delete($path);
         }
 
         $this->memoizedIcons = null;
     }
 
     /**
-     * Expose the directory to Blade Icons so the stored value also works as a
-     * plain icon name anywhere in the app (`->icon('custom-star')`,
-     * `<x-filament::icon icon="custom-star" />`, `@svg('custom-star')`).
-     *
-     * Blade Icons prefixes cannot contain dashes and must be unique, so this
-     * silently falls back to inline SVG rendering when registration is not
-     * possible.
+     * Register the disk directory with Blade Icons (which supports disks),
+     * so "uploads:star" also works as the plain icon name "uploads-star".
      */
     public function registerWithBladeIcons(?Factory $factory = null): bool
     {
@@ -107,7 +110,7 @@ class CustomIconSet implements Contracts\AcceptsUploads
             return $this->isRegisteredWithBladeIcons;
         }
 
-        if (str_contains($this->key, '-') || ! is_dir($this->path)) {
+        if (str_contains($this->key, '-') || $this->directory === '') {
             return $this->isRegisteredWithBladeIcons = false;
         }
 
@@ -116,11 +119,12 @@ class CustomIconSet implements Contracts\AcceptsUploads
 
         if ($existing !== null) {
             return $this->isRegisteredWithBladeIcons = ($existing['prefix'] ?? null) === $this->key
-                && in_array($this->path, $existing['paths'] ?? [], true);
+                && ($existing['disk'] ?? null) === $this->getDisk()
+                && in_array($this->directory, $existing['paths'] ?? [], true);
         }
 
         try {
-            $factory->add($this->key, ['path' => $this->path, 'prefix' => $this->key]);
+            $factory->add($this->key, ['path' => $this->directory, 'prefix' => $this->key, 'disk' => $this->getDisk()]);
 
             return $this->isRegisteredWithBladeIcons = true;
         } catch (CannotRegisterIconSet) {
@@ -128,25 +132,28 @@ class CustomIconSet implements Contracts\AcceptsUploads
         }
     }
 
+    protected function filesystem(): Filesystem
+    {
+        return Storage::disk($this->getDisk());
+    }
+
     /**
      * @return array<string, string>
      */
     protected function scan(): array
     {
-        if (! is_dir($this->path)) {
-            return [];
-        }
-
         $icons = [];
+        $prefix = $this->directory === '' ? '' : $this->directory.'/';
 
-        foreach (File::allFiles($this->path) as $file) {
-            if (strtolower($file->getExtension()) !== 'svg') {
+        foreach ($this->filesystem()->allFiles($this->directory) as $file) {
+            if (strtolower(pathinfo($file, PATHINFO_EXTENSION)) !== 'svg') {
                 continue;
             }
 
-            $name = Str::of($file->getRelativePathname())
+            $name = Str::of($file)
+                ->after($prefix)
                 ->beforeLast('.')
-                ->replace(['\\', '/'], '.')
+                ->replace('/', '.')
                 ->toString();
 
             $icons[$name] = Str::headline(str_replace(['.', '_', '-'], ' ', $name));
@@ -163,11 +170,11 @@ class CustomIconSet implements Contracts\AcceptsUploads
             return null;
         }
 
-        return $this->path.'/'.str_replace('.', '/', $name).'.svg';
+        return ($this->directory === '' ? '' : $this->directory.'/').str_replace('.', '/', $name).'.svg';
     }
 
     protected function getCacheIdentifier(): string
     {
-        return "custom.{$this->key}.".md5($this->path);
+        return "disk.{$this->key}.".md5($this->getDisk().'|'.$this->directory);
     }
 }

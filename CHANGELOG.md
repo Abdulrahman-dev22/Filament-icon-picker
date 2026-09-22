@@ -6,6 +6,15 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-22
+
+### Added
+
+- `DiskIconSet`: icon sets stored on any Laravel filesystem disk (`disk_icon_sets` config).
+- `IconPicker::uploadable()`: an "Upload icon" action that sanitises an SVG, stores it in a set implementing `AcceptsUploads` and selects it.
+- `SvgSanitizer` (replaceable via `SvgSanitizer::using()`) and `IconUploader`.
+- `CustomIconSet` now accepts uploads as well.
+
 ## [1.0.0] - 2026-09-22
 
 ### Added
