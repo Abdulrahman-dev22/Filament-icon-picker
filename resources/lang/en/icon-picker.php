@@ -14,6 +14,20 @@ return [
 
     'sets' => [
         'custom' => 'Custom Icons',
+        'uploads' => 'Uploaded Icons',
+    ],
+
+    'upload' => [
+        'label' => 'Upload icon',
+        'heading' => 'Upload a new icon',
+        'submit' => 'Upload',
+        'file' => 'SVG file',
+        'file_help' => 'Only .svg files up to :size KB. Scripts and external references are removed automatically.',
+        'name' => 'Name',
+        'name_help' => 'Optional. Letters, numbers, spaces and dashes. Defaults to the file name.',
+        'success' => 'Icon ":name" was uploaded and selected.',
+        'invalid' => 'The file is not a valid SVG icon.',
+        'no_set' => 'No icon set accepts uploads.',
     ],
 
     'validation' => [

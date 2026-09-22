@@ -7,6 +7,7 @@ namespace AbdulrahmanDev22\FilamentIconPicker;
 use AbdulrahmanDev22\FilamentIconPicker\Commands\ClearIconCacheCommand;
 use AbdulrahmanDev22\FilamentIconPicker\Http\Controllers\IconController;
 use AbdulrahmanDev22\FilamentIconPicker\IconSets\CustomIconSet;
+use AbdulrahmanDev22\FilamentIconPicker\IconSets\DiskIconSet;
 use AbdulrahmanDev22\FilamentIconPicker\IconSets\IconSetRegistry;
 use AbdulrahmanDev22\FilamentIconPicker\Support\IconCache;
 use BladeUI\Icons\Factory as BladeIconsFactory;
@@ -59,7 +60,7 @@ class FilamentIconPickerServiceProvider extends PackageServiceProvider
         // on pages where no picker is rendered (tables, navigation, emails…).
         $this->callAfterResolving(BladeIconsFactory::class, function (BladeIconsFactory $factory): void {
             foreach ($this->app->make(IconSetRegistry::class)->all() as $set) {
-                if ($set instanceof CustomIconSet) {
+                if ($set instanceof CustomIconSet || $set instanceof DiskIconSet) {
                     $set->registerWithBladeIcons($factory);
                 }
             }

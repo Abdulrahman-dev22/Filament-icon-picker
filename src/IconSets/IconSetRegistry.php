@@ -51,6 +51,15 @@ class IconSetRegistry
             ));
         }
 
+        foreach ($config['disk_icon_sets'] ?? [] as $key => $options) {
+            $registry->register(new DiskIconSet(
+                disk: $options['disk'] ?? null,
+                directory: $options['directory'] ?? 'icon-picker',
+                key: (string) ($options['key'] ?? $key),
+                label: $options['label'] ?? null,
+            ));
+        }
+
         foreach ($config['icon_sets'] ?? [] as $set) {
             $registry->register($set);
         }
