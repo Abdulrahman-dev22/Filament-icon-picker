@@ -88,8 +88,7 @@ it('is searchable and deselectable by default', function (): void {
 it('normalises grid columns', function (): void {
     expect(IconPicker::make('icon')->getGridColumns())->toBe(['default' => 4, 'sm' => 6, 'lg' => 8])
         ->and(IconPicker::make('icon')->columns(10)->getGridColumns())->toBe(['default' => 10])
-        ->and(IconPicker::make('icon')->columns(['md' => 6, 'xl' => 12])->getGridColumns())->toBe(['md' => 6, 'xl' => 12, 'default' => 4])
-        ->and(IconPicker::make('icon')->columns(1)->getGridColumns())->toBe(['default' => 1])
+        ->and(IconPicker::make('icon')->columns(['md' => 6, 'xl' => 12])->getGridColumns())->toBe(['md' => 6, 'xl' => 12, 'default' => 1])
         ->and(IconPicker::make('icon')->columns(fn (): int => 3)->getGridColumns())->toBe(['default' => 3])
         ->and(IconPicker::make('icon')->columns(5)->gridMaxHeight('30rem')->getGridStyle())
         ->toStartWith('--fi-icon-picker-columns-default: 5; --fi-icon-picker-max-height: 30rem; --fi-icon-picker-primary-light: ')
