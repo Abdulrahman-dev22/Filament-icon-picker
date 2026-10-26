@@ -212,6 +212,7 @@ The bundled sets are ordinary implementations of the same interface, so you can 
 | `searchable(bool $condition = true)` | Toggle the search box (on by default). Also `searchPrompt()`, `searchDebounce()`, `noSearchResultsMessage()`. |
 | `deselectable(bool $condition = true)` | Clicking the selected icon again clears the value (on by default). |
 | `gridMaxHeight(string $cssLength)` | Height after which the grid scrolls. Default `20rem`. |
+| `dropdown(bool\|Closure $condition = true)` / `closeOnSelect()` | Open the grid in a dropdown panel instead of showing it inline. See *Dropdown*. |
 | `placeholder(string $text)` | Text shown while nothing is selected. |
 | `storeAs(...)` / `storeAsReference()` / `storeAsBladeIcon()` / `storeAsArray()` / `storeAsJson()` / `storeAsSvg()` | How the value is written to the model. See *Storage formats*. |
 | `uploadable(bool\|Closure $condition = true, ?string $set = null)` / `uploadIconsTo()` / `uploadMaxSize()` / `uploadAction()` | Show an "Upload icon" action. See *Letting users upload icons*. |
@@ -220,6 +221,21 @@ Plus everything from Filament's `Field`: `label()`, `required()`, `disabled()`, 
 `live()`, `afterStateUpdated()`, `rules()`, `hidden()`, `columnSpan()`, etc.
 
 The field validates automatically that a submitted value belongs to one of the field's icon sets.
+
+### Dropdown
+
+By default the tabs, search box and grid are always visible under the selected icon. To save space,
+show only the selected icon, like a select, and open the grid in a dropdown panel when it is clicked:
+
+```php
+IconPicker::make('icon')
+    ->dropdown()
+    ->closeOnSelect(); // optional: close the panel as soon as an icon is picked
+```
+
+The panel is Filament's own dropdown, so it closes on an outside click or <kbd>Escape</kbd> and looks
+the same as other Filament dropdowns. It matches the field's width, and the search box is focused when
+it opens. `closeOnSelect()` has no effect without `dropdown()`.
 
 ## Storage formats
 

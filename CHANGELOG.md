@@ -6,6 +6,12 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `IconPicker::dropdown()`: show only the selected icon and open the tabs, search box and grid in a
+  Filament dropdown panel when the field is clicked. Off by default.
+- `IconPicker::closeOnSelect()`: close that panel as soon as an icon is picked.
+
 ## [1.1.0] - 2026-09-22
 
 ### Added
