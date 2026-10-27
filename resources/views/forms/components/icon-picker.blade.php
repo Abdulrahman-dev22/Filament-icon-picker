@@ -1,13 +1,12 @@
 @php
-    use AbdulrahmanDev22\FilamentIconPicker\Support\IconReference;
-    use AbdulrahmanDev22\FilamentIconPicker\Support\IconRenderer;
-
     $fieldWrapperView = $getFieldWrapperView();
     $statePath = $getStatePath();
     $isDisabled = $isDisabled();
     $isSearchable = $isSearchable() && ! $isDisabled;
     $isDeselectable = $isDeselectable() && ! $isDisabled;
     $isUploadable = $isUploadable() && ! $isDisabled;
+    $isDropdown = $isDropdown();
+    $shouldCloseOnSelect = $shouldCloseOnSelect();
     $sets = $getIconSets();
     $placeholder = $getPlaceholder() ?? __('filament-icon-picker::icon-picker.placeholder');
     $livewireKey = $this->getId() . '.' . $statePath . '.' . $field::class;
@@ -42,6 +41,7 @@
             visible: {},
             selectedHtml: '',
             deselectable: @js($isDeselectable),
+            closeOnSelect: @js($shouldCloseOnSelect),
 
             init() {
                 this.activeSet = this.initialSet()
@@ -107,15 +107,15 @@
             },
 
             select(value) {
-                if (this.state === value) {
-                    if (this.deselectable) {
-                        this.state = null
-                    }
-
-                    return
+                if (this.state !== value) {
+                    this.state = value
+                } else if (this.deselectable) {
+                    this.state = null
                 }
 
-                this.state = value
+                if (this.closeOnSelect) {
+                    this.closeDropdown()
+                }
             },
 
             clear() {
@@ -133,6 +133,50 @@
 
                 this.selectedHtml = option ? option.innerHTML : ''
             },
+
+            {{--
+                The dropdown is Filament's own <x-filament::dropdown>. Its
+                Alpine data differs between Filament 3, 4 and 5, but every
+                version positions the panel with the same floating UI plugin,
+                which shows and hides it through `style.display`, and exposes
+                close(). Only those common parts are relied upon here.
+            --}}
+            setUpDropdownPanel(panel) {
+                {{--
+                    Filament 4 and 5 cap every dropdown panel at 14rem with an
+                    !important rule inside a cascade layer, which no plain
+                    stylesheet can override, and Filament 3 makes it 100vw
+                    wide. Inline !important styles win in all three and let the
+                    panel match the field's width, like Filament's own Select.
+                --}}
+                panel.style.setProperty('width', '100%', 'important')
+                panel.style.setProperty('max-width', 'none', 'important')
+
+                let wasOpen = false
+
+                new MutationObserver(() => {
+                    const isOpen = panel.style.display === 'block'
+
+                    if (isOpen && ! wasOpen) {
+                        {{-- Wait for the click that opened the panel to finish moving focus. --}}
+                        requestAnimationFrame(() => panel.querySelector('.fi-icon-picker-search-input')?.focus())
+                    }
+
+                    wasOpen = isOpen
+                }).observe(panel, { attributeFilter: ['style'] })
+            },
+
+            closeDropdown() {
+                {{-- Called from inside the panel, $root is the dropdown's own x-data element. --}}
+                const dropdown = this.$el.closest('.fi-icon-picker')?.querySelector('.fi-icon-picker-dropdown')
+
+                if (! dropdown) {
+                    return
+                }
+
+                window.Alpine.$data(dropdown).close()
+                dropdown.querySelector('.fi-icon-picker-dropdown-trigger')?.focus()
+            },
         }"
         {{
             $getExtraAttributeBag()
@@ -144,20 +188,80 @@
                 ->style([$getGridStyle()])
         }}
     >
-        <div class="fi-icon-picker-selection">
-            <span
-                x-cloak
-                x-show="state"
-                x-html="selectedHtml"
-                class="fi-icon-picker-selection-preview"
-                aria-hidden="true"
-            ></span>
+        <div
+            @class([
+                'fi-icon-picker-selection',
+                'fi-has-dropdown' => $isDropdown,
+            ])
+        >
+            @if ($isDropdown)
+                {{--
+                    Clear and upload stay outside the trigger, so clicking them
+                    never toggles the panel on any Filament version.
+                --}}
+                <x-filament::dropdown
+                    :menu="false"
+                    placement="bottom-start"
+                    width="fi-icon-picker-dropdown-panel"
+                    wire:key="{{ $livewireKey }}.dropdown"
+                    class="fi-icon-picker-dropdown"
+                >
+                    <x-slot name="trigger">
+                        <button
+                            type="button"
+                            @disabled($isDisabled)
+                            class="fi-icon-picker-dropdown-trigger"
+                        >
+                            <span
+                                x-cloak
+                                x-show="state"
+                                x-html="selectedHtml"
+                                class="fi-icon-picker-selection-preview"
+                                aria-hidden="true"
+                            ></span>
 
-            <span
-                x-text="state || @js($placeholder)"
-                x-bind:class="{ 'fi-icon-picker-selection-placeholder': ! state }"
-                class="fi-icon-picker-selection-label"
-            >{{ $placeholder }}</span>
+                            <span
+                                x-text="state || @js($placeholder)"
+                                x-bind:class="{ 'fi-icon-picker-selection-placeholder': ! state }"
+                                class="fi-icon-picker-selection-label"
+                            >{{ $placeholder }}</span>
+
+                            <x-filament::icon
+                                icon="heroicon-m-chevron-down"
+                                class="fi-icon-picker-dropdown-chevron"
+                            />
+                        </button>
+                    </x-slot>
+
+                    <div
+                        x-init="setUpDropdownPanel($el.parentElement)"
+                        {{--
+                            The panel closes on Escape during the capture phase.
+                            Stopping the event here keeps it from also reaching
+                            a Filament 3 modal, which closes on any Escape that
+                            bubbles up to the window.
+                        --}}
+                        x-on:keydown.escape.stop
+                        class="fi-icon-picker-panel"
+                    >
+                        @include('filament-icon-picker::forms.components.icon-picker.browser')
+                    </div>
+                </x-filament::dropdown>
+            @else
+                <span
+                    x-cloak
+                    x-show="state"
+                    x-html="selectedHtml"
+                    class="fi-icon-picker-selection-preview"
+                    aria-hidden="true"
+                ></span>
+
+                <span
+                    x-text="state || @js($placeholder)"
+                    x-bind:class="{ 'fi-icon-picker-selection-placeholder': ! state }"
+                    class="fi-icon-picker-selection-label"
+                >{{ $placeholder }}</span>
+            @endif
 
             @if ($isDeselectable)
                 <button
@@ -178,102 +282,8 @@
             @endif
         </div>
 
-        @if (count($sets) > 1)
-            <div class="fi-icon-picker-tabs" role="tablist">
-                @foreach ($sets as $key => $set)
-                    <button
-                        type="button"
-                        role="tab"
-                        x-on:click="showSet(@js($key))"
-                        x-bind:class="{ 'fi-active': activeSet === @js($key) }"
-                        x-bind:aria-selected="activeSet === @js($key)"
-                        class="fi-icon-picker-tab"
-                    >
-                        <span>{{ $set->getLabel() }}</span>
-                        <span class="fi-icon-picker-tab-count">{{ count($iconsBySet[$key]) }}</span>
-                    </button>
-                @endforeach
-            </div>
-        @endif
-
-        @if ($isSearchable && count($sets))
-            {{--
-                A plain <input> is used on purpose: a Blade echo inside an
-                attribute name (x-model.debounce.{{ ... }}) prevents Blade from
-                compiling a <x-filament::input> component tag.
-            --}}
-            <x-filament::input.wrapper
-                inline-prefix
-                prefix-icon="heroicon-m-magnifying-glass"
-                class="fi-icon-picker-search"
-            >
-                <input
-                    type="search"
-                    autocomplete="off"
-                    placeholder="{{ $getSearchPrompt() }}"
-                    x-model.debounce.{{ $getSearchDebounce() }}ms="search"
-                    class="fi-input fi-icon-picker-search-input"
-                />
-            </x-filament::input.wrapper>
-        @endif
-
-        @forelse ($sets as $key => $set)
-            <div
-                x-show="activeSet === @js($key)"
-                @if (! $loop->first) x-cloak @endif
-                wire:key="{{ $livewireKey }}.sets.{{ $key }}"
-                role="tabpanel"
-                class="fi-icon-picker-set"
-            >
-                @if (count($iconsBySet[$key]))
-                    <div
-                        x-show="hasResults(@js($key))"
-                        class="fi-icon-picker-grid"
-                    >
-                        @foreach ($iconsBySet[$key] as $name => $label)
-                            @php
-                                $value = IconReference::make($key, (string) $name)->toString();
-                                $iconHtml = IconRenderer::render($set->getIcon((string) $name), ['class' => 'fi-icon-picker-icon']);
-                            @endphp
-
-                            @continue($iconHtml === null)
-
-                            <button
-                                type="button"
-                                data-icon-picker-icon="{{ $value }}"
-                                title="{{ $label }} ({{ $name }})"
-                                aria-label="{{ $label }}"
-                                x-show="isVisible(@js($key), @js((string) $name))"
-                                x-bind:class="{ 'fi-selected': isSelected(@js($value)) }"
-                                x-bind:aria-pressed="isSelected(@js($value))"
-                                x-on:click="select(@js($value))"
-                                @disabled($isDisabled)
-                                class="fi-icon-picker-option"
-                            >
-                                {{ $iconHtml }}
-                            </button>
-                        @endforeach
-                    </div>
-
-                    @if ($isSearchable)
-                        <div
-                            x-cloak
-                            x-show="! hasResults(@js($key))"
-                            class="fi-icon-picker-empty"
-                        >
-                            {{ $getNoSearchResultsMessage() }}
-                        </div>
-                    @endif
-                @else
-                    <div class="fi-icon-picker-empty">
-                        {{ __('filament-icon-picker::icon-picker.empty_set') }}
-                    </div>
-                @endif
-            </div>
-        @empty
-            <div class="fi-icon-picker-empty">
-                {{ __('filament-icon-picker::icon-picker.no_sets') }}
-            </div>
-        @endforelse
+        @unless ($isDropdown)
+            @include('filament-icon-picker::forms.components.icon-picker.browser')
+        @endunless
     </div>
 </x-dynamic-component>

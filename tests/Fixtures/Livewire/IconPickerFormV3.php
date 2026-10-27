@@ -35,6 +35,12 @@ class IconPickerFormV3 extends Component implements HasActions, HasForms
 
     public bool $uploadable = false;
 
+    public bool $dropdown = false;
+
+    public bool $closeOnSelect = false;
+
+    public bool $disabled = false;
+
     public function mount(): void
     {
         $this->form->fill(['icon' => $this->initialIcon]);
@@ -48,6 +54,9 @@ class IconPickerFormV3 extends Component implements HasActions, HasForms
                     ->customIconsPath(TestCase::fixturePath('icons'), 'icons')
                     ->icons($this->uploadable ? [new DiskIconSet(disk: 'icons', directory: 'icons', key: 'uploads')] : [])
                     ->uploadable($this->uploadable)
+                    ->dropdown($this->dropdown)
+                    ->closeOnSelect($this->closeOnSelect)
+                    ->disabled($this->disabled)
                     ->storeAs($this->storageFormat ?? 'reference'),
             ])
             ->statePath('data');

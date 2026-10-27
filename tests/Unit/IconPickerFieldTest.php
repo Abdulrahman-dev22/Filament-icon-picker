@@ -85,6 +85,19 @@ it('is searchable and deselectable by default', function (): void {
         ->and(IconPicker::make('icon')->deselectable(false)->isDeselectable())->toBeFalse();
 });
 
+it('renders inline unless dropdown mode is enabled', function (): void {
+    expect(IconPicker::make('icon')->isDropdown())->toBeFalse()
+        ->and(IconPicker::make('icon')->dropdown()->isDropdown())->toBeTrue()
+        ->and(IconPicker::make('icon')->dropdown(fn (): bool => false)->isDropdown())->toBeFalse();
+});
+
+it('only closes on select in dropdown mode', function (): void {
+    expect(IconPicker::make('icon')->dropdown()->shouldCloseOnSelect())->toBeFalse()
+        ->and(IconPicker::make('icon')->dropdown()->closeOnSelect()->shouldCloseOnSelect())->toBeTrue()
+        ->and(IconPicker::make('icon')->dropdown()->closeOnSelect(fn (): bool => false)->shouldCloseOnSelect())->toBeFalse()
+        ->and(IconPicker::make('icon')->closeOnSelect()->shouldCloseOnSelect())->toBeFalse();
+});
+
 it('normalises grid columns', function (): void {
     expect(IconPicker::make('icon')->getGridColumns())->toBe(['default' => 4, 'sm' => 6, 'lg' => 8])
         ->and(IconPicker::make('icon')->columns(10)->getGridColumns())->toBe(['default' => 10])

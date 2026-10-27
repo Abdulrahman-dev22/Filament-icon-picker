@@ -21,6 +21,7 @@ use Filament\Support\Concerns\HasExtraAlpineAttributes;
 class IconPicker extends Field
 {
     use CanBeSearchable;
+    use Concerns\CanBeDropdown;
     use Concerns\CanUploadIcons;
     use Concerns\HasGridColumns;
     use Concerns\HasIconSets;
